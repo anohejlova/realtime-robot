@@ -1,0 +1,81 @@
+public class Steering
+{
+	private static byte history_size = 5;
+	private static byte threshold = 0.1;
+	private static byte max_angle = 60;
+	private static byte angle_level = 10;
+
+	private byte current_his_pos = 0;
+	private byte measurement = 0;
+	private byte change = 0;
+	private byte new_angle = 0;
+	private byte last_angle = 0;
+	private byte lvl_count = 0;
+
+	private byte[] meas_his = new byte[history_size];
+	private byte[] steer_his = new byte[history_size];
+
+	void steering_cor(){
+		while(true){
+			measurment = 0; //call leJOS function	
+			change = meas_his[history_size + (current_his_pos - 1) % history_size];
+			if((change > (-threshold)) && (change < threshold))
+			{
+				//change engine speed +5%
+				meas_his[current_his_pos] = measurment;
+				steer_his[current_his_pos] = 0;
+				current_his_pos = (current_his_pos + 1) % history_size;
+				//suspend
+				continue;
+			}
+			
+			last_angle = steer_his[history_size + (current_his_pos -1) % history_size];
+			last_angle = System.out.println(Math.min(max_angle, last_angle));
+			last_angle = System.out.println(Math.max(((-1)*max_angle), last_angle));
+			count = change / threshold;
+			
+			if(change > 0)
+			{
+				new_angle = level_angle * count;
+				if(last_angle > 0)
+				{
+					//change_angle((-1)*(last_angle + new_angle));
+					steer_his[current_his_pos] = (-1) * new_angle;
+				}else{
+					//change_angle((-1)*last_angle + new_angle);
+					steer_his[current_his_pos] = new_angle;
+				}
+				
+				//change engine speed -10%
+				meas_his[current_his_pos] = measurment;				
+				current_his_pos = (current_his_pos + 1) % history_size;
+				//suspend
+				continue;
+			}else{
+				new_angle = (level_angle / 4) * count;
+				if(last_angle > 0)
+				{
+					//change_angle((-1)*(new_angle));
+					steer_his[current_his_pos] = last_angle - new_angle;
+				}else{
+					//change_angle(new_angle);
+					steer_his[current_his_pos] = last_angle + new_angle;
+				}
+				
+				//change engine speed += count * 5%
+				meas_his[current_his_pos] = measurment;				
+				current_his_pos = (current_his_pos + 1) % history_size;
+				//suspend
+				continue;				
+			}
+		}
+
+
+  	//If Karel gets here, then he is lost. If you see him, please help him.
+	//large_engine = full_stop
+	System.exit(-1);
+
+
+	}
+
+}
