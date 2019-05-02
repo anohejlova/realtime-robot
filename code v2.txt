@@ -1,0 +1,66 @@
+history_size = 5
+threshold = 10% = 0.1
+angle - positive clockwise, negative counterclockwise
+max_angle = 60 //limit to prevent tipping over
+level_angle = 10 //depends on threshold
+current_history_position = 0
+steering
+while(true){
+	measurment_history[history_size] //history of light measurments
+	streeing_change[history_size] //history of stering changes, in degreess
+	
+	
+	int current = measur() //measur current light reflection
+	change = measurment_history[history_size + current_history_position-1 mod history_size] - current //difference between current measurment and previous one
+	if(change > (-threshold) AND change < threshold)
+	{
+		engine_speed += 5%
+		measurment_history[current_history_position] = current //save current measurment
+		steering_change[current_history_position] = 0 //no change in stearing
+		current_history_position = (current_history_position + 1) mod history_size //move history pointer +1
+		suspend() //suspend thread and wait
+		continue //start next iteration of while cycle
+	}
+	
+    last_angle = steering_change[history_size + current_history_position-1 mod history_size] //get value of last stearing change
+    count = change / threshold //get number of levels
+
+    if(change > 0) //differentiate worse from better measurment change
+    {	
+		new_angle = level_angle * (count) //angle that will be used
+		last_angle = min(max_angle, last_angle) //get last streering change, capped at max_angle
+		
+		if(last_angle > 0) //differentiate right and left turn
+			change_angle(-1*(last_angle + new_angle)) //negate previous streeing change and make a new one
+			steering_change[current_history_position] = -1* new_angle //save current steering change
+		else
+			change_angle(-1*last_angle + new_angle)
+			steering_change[current_history_position] = new_angle
+
+		engine_speed -= count * 10% //worse measurment = lower speed
+		measurment_history[current_history_position] = current //save current measurment
+		current_history_position = (current_history_position + 1) mod history_size //move history pointer +1
+		suspend() //suspend thread and wait
+		continue //start next iteration of while cycle
+    }else{
+		new_angle = level_angle/4 * (count) //change of steering angle is small
+		last_angle = min(max_angle, abs(last_angle))
+		
+		if(last_angle > 0)
+			change_angle(-1*(new_angle))
+			steering_change[current_history_position] = last_angle - new_angle
+		else
+			change_angle(new_angle)
+			steering_change[current_history_position] = last_angle + new_angle
+
+		engine_speed += count * 5%
+		measurment_history[current_history_position] = current
+		current_history_position = (current_history_position + 1) mod history_size
+		suspend()
+		continue
+
+   }
+   //If Karel gets here, then he is lost. If you see him, please help him.
+   large_engine = full_stop
+   terminate
+}
