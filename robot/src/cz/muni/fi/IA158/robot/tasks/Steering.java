@@ -28,9 +28,15 @@ public class Steering
 	private int[] meas_his = new int[history_size];
 	private int[] steer_his = new int[history_size];
 	
+		
     private void setLargeMotorSpeed(int newSpeed)
     {
     	powerMotor.setSpeed(newSpeed);
+    }
+    
+    private int getLargeMotorSpeed()
+    {
+    	return powerMotor.getSpeed();
     }
     
     private void change_angle(int angle)
@@ -45,6 +51,8 @@ public class Steering
 	
 	
 	public void steering_cor(){
+		setLargeMotorSpeed(5);
+		steerMotor.rotateTo(0, false);
 		while(true){
 			measurment = measurment();	
 			change = meas_his[history_size + (current_his_pos - 1) % history_size];
