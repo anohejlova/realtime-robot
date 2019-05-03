@@ -8,7 +8,7 @@ import lejos.hardware.motor.EV3MediumRegulatedMotor;
 import lejos.hardware.port.SensorPort;
 
 public class Steering
-{
+{	
     static EV3LargeRegulatedMotor powerMotor = new EV3LargeRegulatedMotor(MotorPort.A);
     static EV3MediumRegulatedMotor steerMotor = new EV3MediumRegulatedMotor(MotorPort.D);    
     static EV3ColorSensor light = new EV3ColorSensor(SensorPort.S1);
@@ -25,8 +25,23 @@ public class Steering
 	private int new_angle = 0;
 	private int last_angle = 0;
 
-	private int[] meas_his = new int[history_size];
-	private int[] steer_his = new int[history_size];
+	private int[] meas_his;
+	private int[] steer_his;
+	
+	public Steering()
+	{
+		meas_his = new int[history_size];
+		for(int i=0;i<history_size; ++i)
+		{
+			meas_his[i] = 0;
+		}
+		
+		steer_his = new int[history_size];
+		for(int i=0;i<history_size; ++i)
+		{
+			steer_his[i] = 0;
+		}
+	}
 	
 		
     private void setLargeMotorSpeed(int newSpeed)
@@ -49,8 +64,8 @@ public class Steering
     	return (int)(Math.round(((light.getRedMode().sampleSize())*100)));
     }
 	
-	
 	public void steering_cor(){
+	
 		setLargeMotorSpeed(5);
 		steerMotor.rotateTo(0, false);
 		while(true){
