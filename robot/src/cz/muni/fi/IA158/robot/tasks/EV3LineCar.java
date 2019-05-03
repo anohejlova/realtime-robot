@@ -19,11 +19,12 @@ public class EV3LineCar {
 
     public static void main(String[] args)
     {
+    	powerMotor = new EV3LargeRegulatedMotor(MotorPort.A);
     	if (powerMotor != null) {
     		powerMotor.backward();
     		Delay.msDelay(5000);
     		powerMotor.stop();
-    	}
+    	} 
     	
     	//powerMotor.setSpeed(powerMotor.getMaxSpeed());
     	//steerMotor.rotateTo(0);
