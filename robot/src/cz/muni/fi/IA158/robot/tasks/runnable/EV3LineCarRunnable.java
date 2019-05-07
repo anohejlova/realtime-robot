@@ -2,10 +2,23 @@ package cz.muni.fi.IA158.robot.tasks.runnable;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
+import lejos.hardware.motor.EV3LargeRegulatedMotor;
+import lejos.hardware.motor.EV3MediumRegulatedMotor;
+import lejos.hardware.port.MotorPort;
+import lejos.hardware.sensor.EV3ColorSensor;
+import lejos.hardware.sensor.EV3IRSensor;
+
 public class EV3LineCarRunnable {
+	
+	static EV3LargeRegulatedMotor powerMotor;
+    static EV3MediumRegulatedMotor steerMotor;
+    static EV3IRSensor ir;
+    static EV3ColorSensor light;
 
     public static void main(String[] args)
     {
+    	
+    	EV3LargeRegulatedMotor powerMotor2 = new EV3LargeRegulatedMotor(MotorPort.A);
     	BlockingQueue<Job> queueDist = new ArrayBlockingQueue<>(10);
     	BlockingQueue<Job> queueSteer = new ArrayBlockingQueue<>(10);
     	
@@ -21,8 +34,9 @@ public class EV3LineCarRunnable {
     	
     	Job distJob = null;
     	Job steerJob = null;
+    	int lifeCounter = 0;
     	
-    	while (true) {  //should be replaced by sensible condition
+    	while (lifeCounter <= 5000) {  
     		
 	    	if (distJob == null) {
 	    		
@@ -35,24 +49,23 @@ public class EV3LineCarRunnable {
 			if ((distJob != null) && (steerJob != null)) {
 				
 				if (distJob.getDeadline() < steerJob.getDeadline()) {
-					distThread.run();
+					distThread.notify();
 					distJob = null;
 				} else {
-					steerThread.run();
+					steerThread.notify();
 					steerJob = null;
 				}
 			} else if (steerJob != null) {
-				steerThread.run();
+				steerThread.notify();
 				distJob = null;
 			} else if (distJob != null) {
-				distThread.run();
+				distThread.notify();
 				steerJob = null;
 			}
+			
+			lifeCounter++;
     	}
-		
-    	
-    	//long millis = System.currentTimeMillis(); // number of milliseconds from start of the epoch
-    	
+		   	
     }
 }
 

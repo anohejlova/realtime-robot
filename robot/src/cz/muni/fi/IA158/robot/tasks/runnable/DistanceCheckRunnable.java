@@ -13,11 +13,17 @@ public class DistanceCheckRunnable implements Runnable{
 
 	@Override
 	public void run() {
-
-		long now = System.currentTimeMillis(); // number of milliseconds from start of the epoch
-		Job release = new Job(now, now + releaseDeadlineDiff);
-		queueDist.add(release);
-		
+		while (true) {
+			//steering job
+			long now = System.currentTimeMillis(); // number of milliseconds from start of the epoch
+			Job release = new Job(now, now + releaseDeadlineDiff);
+			queueDist.add(release);
+			try {
+				wait();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 
 }
