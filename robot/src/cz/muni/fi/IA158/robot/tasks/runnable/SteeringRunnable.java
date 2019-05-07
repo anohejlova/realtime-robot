@@ -4,6 +4,7 @@ import java.util.concurrent.BlockingQueue;
 
 public class SteeringRunnable implements Runnable{
 
+	public Thread thread;
 	boolean suspended = false;
 	BlockingQueue<Job> queueSteer;
 	long releaseDeadlineDiff = 100;
@@ -34,12 +35,18 @@ public class SteeringRunnable implements Runnable{
 	    System.out.println("steerThread exiting.");
 	}
 	
+	public void start () {
+		if (thread == null) {
+	    	thread = new Thread (this);
+	    	thread.start ();
+		}
+	}
 	
-	void suspend() {
+	private void suspend() {
 		suspended = true;
 	}
 	   
-	synchronized void resume() {
+	public synchronized void resume() {
 		suspended = false;
 	    notify();
 	}

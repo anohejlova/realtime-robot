@@ -23,11 +23,9 @@ public class EV3LineCarRunnable {
     	
     	SteeringRunnable steering = new SteeringRunnable(queueSteer);
     	DistanceCheckRunnable distance = new DistanceCheckRunnable(queueDist);
-    	Thread steerThread = new Thread(steering);
-    	Thread distThread = new Thread(distance);
-    	steerThread.start();
-    	distThread.start();
-    	new Thread(distance).start();
+    	steering.start();
+    	distance.start();
+
     	
     	Job distJob = null;
     	Job steerJob = null;
@@ -38,29 +36,38 @@ public class EV3LineCarRunnable {
 	    	if (distJob == null) {
 	    		
 				distJob = queueDist.poll();
+				System.err.println("poll queueDist");
 			}
 	    	if (steerJob == null) {
 	    		
 	    		steerJob = queueSteer.poll();
+	    		System.err.println("poll queueSteer");
 			}
 			if ((distJob != null) && (steerJob != null)) {
 				
 				if (distJob.getDeadline() < steerJob.getDeadline()) {
+					System.err.println("main - 1. condition - front");
 					distance.resume();
-					System.err.println("main - 1. condition");
+					Thread.yield();
+					System.err.println("main - 1. condition -back");
 					distJob = null;
 				} else {
+					System.err.println("main - 2. condition- front");
 					steering.resume();
-					System.err.println("main - 2. condition");
+					Thread.yield();
+					System.err.println("main - 2. condition - back");
 					steerJob = null;
 				}
 			} else if (steerJob != null) {
 				steering.resume();
+				Thread.yield();
 				System.err.println("main - 3. condition");
 				distJob = null;
 			} else if (distJob != null) {
+				System.err.println("main - 4. condition-front");
 				distance.resume();
-				System.err.println("main - 4. condition");
+				Thread.yield();
+				System.err.println("main - 4. condition-back");
 				steerJob = null;
 			}
 			

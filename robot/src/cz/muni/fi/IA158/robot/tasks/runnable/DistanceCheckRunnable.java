@@ -4,6 +4,7 @@ import java.util.concurrent.BlockingQueue;
 
 public class DistanceCheckRunnable implements Runnable{
 	
+	public Thread thread;
 	boolean suspended = false;
 	private BlockingQueue<Job> queueDist;
 	long releaseDeadlineDiff = 200;
@@ -35,12 +36,18 @@ public class DistanceCheckRunnable implements Runnable{
 	    System.out.println("distThread exiting.");
 	}
 	
+	public void start () {
+		if (thread == null) {
+	    	thread = new Thread (this);
+	    	thread.start ();
+		}
+	}
 	
-	void suspend() {
+	private void suspend() {
 		suspended = true;
 	}
 	   
-	synchronized void resume() {
+	public synchronized void resume() {
 		suspended = false;
 	    notify();
 	}
