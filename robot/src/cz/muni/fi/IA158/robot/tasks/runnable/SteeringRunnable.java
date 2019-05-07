@@ -18,10 +18,14 @@ public class SteeringRunnable implements Runnable{
 			long now = System.currentTimeMillis(); // number of milliseconds from start of the epoch
 			Job release = new Job(now, now + releaseDeadlineDiff);
 			queueSteer.add(release);
-			try {
-				wait();
-			} catch (InterruptedException e) {
-				e.printStackTrace();
+			System.err.println("steering");
+			synchronized(this) {
+				try {
+					this.wait();
+				} catch (InterruptedException e) {
+					System.err.println("InterruptedException steering wait");
+					e.printStackTrace();
+				}
 			}
 		}
 		
