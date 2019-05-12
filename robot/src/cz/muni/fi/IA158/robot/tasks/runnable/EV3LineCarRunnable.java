@@ -23,57 +23,65 @@ public class EV3LineCarRunnable {
     	
     	SteeringRunnable steering = new SteeringRunnable(queueSteer);
     	DistanceCheckRunnable distance = new DistanceCheckRunnable(queueDist);
-    	steering.start();
-    	distance.start();
+    	
 
     	
     	Job distJob = null;
     	Job steerJob = null;
     	int lifeCounter = 0;
-    	
-    	while (lifeCounter <= 5000) {  
+    	try {
+    		Thread.sleep(2000);
+    		steering.start();
+    		Thread.sleep(2000);
+        	distance.start();
+        	
+    	while (lifeCounter <= 1000) {  
     		
 	    	if (distJob == null) {
 	    		
 				distJob = queueDist.poll();
-				System.err.println("poll queueDist");
+				System.out.println("poll queueDist");
 			}
 	    	if (steerJob == null) {
 	    		
 	    		steerJob = queueSteer.poll();
-	    		System.err.println("poll queueSteer");
+	    		System.out.println("poll queueSteer");
 			}
 			if ((distJob != null) && (steerJob != null)) {
 				
 				if (distJob.getDeadline() < steerJob.getDeadline()) {
-					System.err.println("main - 1. condition - front");
+					System.out.println("con 1");					
 					distance.resume();
-					Thread.yield();
-					System.err.println("main - 1. condition -back");
+					Thread.yield();					
 					distJob = null;
 				} else {
-					System.err.println("main - 2. condition- front");
+					System.out.println("con 2");
 					steering.resume();
 					Thread.yield();
-					System.err.println("main - 2. condition - back");
 					steerJob = null;
 				}
 			} else if (steerJob != null) {
+				System.out.println("con 3");
 				steering.resume();
 				Thread.yield();
-				System.err.println("main - 3. condition");
-				distJob = null;
+				steerJob = null;
 			} else if (distJob != null) {
-				System.err.println("main - 4. condition-front");
+				System.out.println("con 4");				
 				distance.resume();
 				Thread.yield();
-				System.err.println("main - 4. condition-back");
-				steerJob = null;
+				distJob = null;
+			} else {
+				System.out.println("NO jobs");
 			}
 			
 			lifeCounter++;
-    	}
-		   	
+    	}}catch (InterruptedException e) {
+ 	       System.out.println("Main Thread interrupted.");
+ 	    }
+ 	    System.out.println("Main thread exiting.");
+ 	    
+ 	    
+		System.exit(0);
     }
 }
 

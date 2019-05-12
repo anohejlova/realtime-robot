@@ -17,19 +17,20 @@ public class DistanceCheckRunnable implements Runnable{
 	public void run() {
 	
 		try{
-			long now = System.currentTimeMillis(); // number of milliseconds from start of the epoch
-			Job release = new Job(now, now + releaseDeadlineDiff);
-			queueDist.add(release);
-			System.err.println("distance");
-		    suspend();
-		     
-		    synchronized(this) {
-		    	while(suspended) {
-		    		wait();
-		    	}
-		    }
-		       
-		       //distance check code
+			while(true) {
+				System.out.println("Dist");
+				long now = System.currentTimeMillis(); // number of milliseconds from start of the epoch
+				Job release = new Job(now, now + releaseDeadlineDiff);
+				queueDist.add(release);			
+			    suspend();
+			    synchronized(this) {
+			    	while(suspended) {
+			    		wait();
+			    	}		    	
+			    }
+			    
+			  //distance check code
+			}  
 	    } catch (InterruptedException e) {
 	       System.out.println("distThread interrupted.");
 	    }
@@ -39,6 +40,8 @@ public class DistanceCheckRunnable implements Runnable{
 	public void start () {
 		if (thread == null) {
 	    	thread = new Thread (this);
+	    	thread.setPriority(thread.getPriority() + 1);
+	    	//thread.setPriority(10);
 	    	thread.start ();
 		}
 	}
@@ -51,5 +54,4 @@ public class DistanceCheckRunnable implements Runnable{
 		suspended = false;
 	    notify();
 	}
-
 }
