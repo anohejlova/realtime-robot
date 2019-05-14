@@ -11,11 +11,10 @@ import lejos.hardware.sensor.EV3IRSensor;
 
 public class EV3LineCarRunnable {
 	
-	//static EV3LargeRegulatedMotor powerMotor;
 
     public static void main(String[] args)
     {
-    	int frame = 25;
+    	int frame = 50;
     	Thread mainThread;
     	
     	EV3LargeRegulatedMotor powerMotor = new EV3LargeRegulatedMotor(MotorPort.A);
@@ -46,45 +45,45 @@ public class EV3LineCarRunnable {
     		steering.start();
     		
         	
-        	//powerMotor.backward();        	
+        	powerMotor.backward();        	
         	
-        	while (lifeCounter <= 300) {  
+        	while (lifeCounter <= 1000) {  
     		
 		    	if (distJob == null) {
 		    		
 					distJob = queueDist.poll();
-					System.out.println("poll queueDist");
+					//System.out.println("poll queueDist");
 				}
 		    	if (steerJob == null) {
 		    		
 		    		steerJob = queueSteer.poll();
-		    		System.out.println("poll queueSteer");
+		    		//System.out.println("poll queueSteer");
 				}
 				if ((distJob != null) && (steerJob != null)) {
 					
 					if (distJob.getDeadline() < steerJob.getDeadline()) {
-						System.out.println("con 1");
+						//System.out.println("con 1");
 						distance.resume();			
 						mainThread.sleep(frame);
 						distJob = null;
 					} else {
-						System.out.println("con 2");						
+						//System.out.println("con 2");						
 						steering.resume();			
 						mainThread.sleep(frame);
 						steerJob = null;
 					}
 				} else if (steerJob != null) {
-					System.out.println("con 3");					
+					//System.out.println("con 3");					
 					steering.resume();
 					mainThread.sleep(frame);
 					steerJob = null;
 				} else if (distJob != null) {
-					System.out.println("con 4");					
+					//System.out.println("con 4");					
 					distance.resume();
 					mainThread.sleep(frame);
 					distJob = null;
 				} else {
-					System.out.println("NO jobs");
+					//System.out.println("NO jobs");
 				}
 			
 				lifeCounter++;

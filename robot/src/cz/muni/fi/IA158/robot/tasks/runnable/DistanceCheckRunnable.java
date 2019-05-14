@@ -35,11 +35,11 @@ public class DistanceCheckRunnable implements Runnable{
 	
 		try{
 			while(true) {
-				System.out.println("Dist");
+				//System.out.println("Dist");
 				long now = System.currentTimeMillis(); // number of milliseconds from start of the epoch
 				Job release = new Job(now, now + releaseDeadlineDiff);
 				queueDist.add(release);
-				System.out.println("Dist release");
+				//System.out.println("Dist release");
 			    suspend();
 			    synchronized(this) {
 			    	while(suspended) {
@@ -75,7 +75,7 @@ public class DistanceCheckRunnable implements Runnable{
 	private void adaptSpeed() {
 		
 		if (newDistance <= 20) {
-			System.out.println("STOP" + newDistance + " " + lastDistance);
+			//System.out.println("STOP" + newDistance + " " + lastDistance);
 			powerMotor.stop();
 			return;
 		} 
@@ -85,23 +85,23 @@ public class DistanceCheckRunnable implements Runnable{
 					
 		if (diff <= -60) {
 			powerMotor.setSpeed((int) Math.round(0.2 *curSpeed));
-			System.out.println(" sub -60");
+			//System.out.println(" sub -60");
 		} else if (diff <= -40) {
 			powerMotor.setSpeed((int) Math.round(0.4 *curSpeed));
-			System.out.println("sub -40");
+			//System.out.println("sub -40");
 		} else if (diff <= -20) {
 			powerMotor.setSpeed((int) Math.round(0.6 *curSpeed));
-			System.out.println("sub -20");
+			//System.out.println("sub -20");
 		} else if (diff < 10) {
 			powerMotor.setSpeed((int) Math.round(0.8 *curSpeed));
-			System.out.println("sub 10");
+			//System.out.println("sub 10");
 		} else if ((diff > 60) && (lastDistance <= 20)) {
 			powerMotor.setSpeed(180);
 			powerMotor.backward();
-			System.out.println("restart");
+			//System.out.println("restart");
 		} else if (diff > 10) {
 			powerMotor.setSpeed((int) Math.round(1.2 *curSpeed));
-			System.out.println("over 10");
+			//System.out.println("over 10");
 		}
 	}
 	
