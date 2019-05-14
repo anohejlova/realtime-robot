@@ -70,6 +70,7 @@ public class SteeringRunnable implements Runnable{
 				long now = System.currentTimeMillis(); // number of milliseconds from start of the epoch
 				Job release = new Job(now, now + releaseDeadlineDiff);
 				queueSteer.add(release);				
+				System.out.println("Steer release");
 			    suspend();
 			     
 			    synchronized(this) {
@@ -89,9 +90,9 @@ public class SteeringRunnable implements Runnable{
 	public void start () {
 		if (thread == null) {
 	    	thread = new Thread (this);
-	    	thread.setPriority(thread.getPriority() + 1);
-	    	thread.setPriority(10);
-	    	thread.start ();
+	    	//thread.setPriority(thread.getPriority() + 1);
+	    	//thread.setPriority(10);
+	    	thread.start();
 		}
 	}
 	

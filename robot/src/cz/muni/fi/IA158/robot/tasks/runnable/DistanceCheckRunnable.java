@@ -38,7 +38,8 @@ public class DistanceCheckRunnable implements Runnable{
 				System.out.println("Dist");
 				long now = System.currentTimeMillis(); // number of milliseconds from start of the epoch
 				Job release = new Job(now, now + releaseDeadlineDiff);
-				queueDist.add(release);			
+				queueDist.add(release);
+				System.out.println("Dist release");
 			    suspend();
 			    synchronized(this) {
 			    	while(suspended) {
@@ -94,9 +95,9 @@ public class DistanceCheckRunnable implements Runnable{
 	public void start () {
 		if (thread == null) {
 	    	thread = new Thread (this);
-	    	thread.setPriority(thread.getPriority() + 1);
+	    	//thread.setPriority(thread.getPriority() + 1);
 	    	//thread.setPriority(10);
-	    	thread.start ();
+	    	thread.start();
 		}
 	}
 	

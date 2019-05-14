@@ -15,6 +15,8 @@ public class EV3LineCarRunnable {
 
     public static void main(String[] args)
     {
+    	int frame = 25;
+    	Thread mainThread;
     	
     	EV3LargeRegulatedMotor powerMotor = new EV3LargeRegulatedMotor(MotorPort.A);
     	EV3MediumRegulatedMotor steerMotor = new EV3MediumRegulatedMotor(MotorPort.D);
@@ -35,12 +37,16 @@ public class EV3LineCarRunnable {
     	Job steerJob = null;
     	int lifeCounter = 0;
     	try {
-    		Thread.sleep(2000);
-    		steering.start();
-    		Thread.sleep(2000);
+    		mainThread = Thread.currentThread();
+    		mainThread.setPriority(1);
+    		
+    		mainThread.sleep(50 * frame);
         	distance.start();
+    		mainThread.sleep(50 * frame);
+    		steering.start();
+    		
         	
-        	powerMotor.backward();        	
+        	//powerMotor.backward();        	
         	
         	while (lifeCounter <= 300) {  
     		
@@ -57,25 +63,25 @@ public class EV3LineCarRunnable {
 				if ((distJob != null) && (steerJob != null)) {
 					
 					if (distJob.getDeadline() < steerJob.getDeadline()) {
-						System.out.println("con 1");					
-						distance.resume();
-						Thread.yield();					
+						System.out.println("con 1");
+						distance.resume();			
+						mainThread.sleep(frame);
 						distJob = null;
 					} else {
-						System.out.println("con 2");
-						steering.resume();
-						Thread.yield();
+						System.out.println("con 2");						
+						steering.resume();			
+						mainThread.sleep(frame);
 						steerJob = null;
 					}
 				} else if (steerJob != null) {
-					System.out.println("con 3");
+					System.out.println("con 3");					
 					steering.resume();
-					Thread.yield();
+					mainThread.sleep(frame);
 					steerJob = null;
 				} else if (distJob != null) {
-					System.out.println("con 4");				
+					System.out.println("con 4");					
 					distance.resume();
-					Thread.yield();
+					mainThread.sleep(frame);
 					distJob = null;
 				} else {
 					System.out.println("NO jobs");
