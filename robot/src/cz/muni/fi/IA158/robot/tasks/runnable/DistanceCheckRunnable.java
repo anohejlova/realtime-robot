@@ -46,9 +46,9 @@ public class DistanceCheckRunnable implements Runnable{
 			    	}		    	
 			    }
 			    
-			  if (checkDistance()) {
+			  /*if (checkDistance()) {
 				  adaptSpeed();
-			  }
+			  }*/
 			}  
 	    } catch (InterruptedException e) {
 	       System.out.println("distThread interrupted.");
@@ -66,7 +66,7 @@ public class DistanceCheckRunnable implements Runnable{
 	      
 	}
 	
-	private void adaptSpeed () {
+	private void adaptSpeed() {
 		
 		if (newDistance <= 20) {
 			powerMotor.stop();
