@@ -10,10 +10,11 @@ public class SteeringRunnable implements Runnable{
 	static EV3LargeRegulatedMotor powerMotor;
     static EV3MediumRegulatedMotor steerMotor;    
     static EV3ColorSensor light;
-	    
-    private int baseLine;
-    private static int cat = 5;
-    private int thres = 20;
+    
+    private float baseLine;
+    private int thres = 10;
+    private int timer = 0;
+    private int maxSpeed = 180;
     
 	private static int history_size = 11;
 	private static double threshold = 0.05;
@@ -22,7 +23,7 @@ public class SteeringRunnable implements Runnable{
 
 	private int current_his_pos = 0;
 	private int count = 0;
-	private int measurment = 0;
+	private int measurement = 0;
 	private int change = 0;
 	private int new_angle = 0;
 	private int last_angle = 0;
@@ -48,15 +49,14 @@ public class SteeringRunnable implements Runnable{
 		steer_his = new int[history_size];
 		for(int i=0;i<history_size; i++)
 		{
-			steer_his[i] = -3;
+			steer_his[i] = 0;
 		}
 		
 		powerMotor = power;
 		steerMotor = steer;
 		light = lightSen;
 		
-		baseLine = measurment();
-		//thres = baseLine / cat;
+		baseLine = measurementFloat();
 	}
 	
 	@Override
@@ -73,14 +73,14 @@ public class SteeringRunnable implements Runnable{
 			}
 			
 			steerMotor.rotateTo(0, false);
-			measurment = measurment();
+			measurement = measurement();
+			setLargeMotorSpeed(maxSpeed);
 			for(int i=0;i<history_size; i++)
 			{
-				meas_his[i] = measurment;
-			}
-			
-			
+				meas_his[i] = measurement;
+			}	    
 			while(true) {
+
 				//System.out.println("Steer");
 				long now = System.currentTimeMillis(); // number of milliseconds from start of the epoch
 				Job release = new Job(now, now + releaseDeadlineDiff);
@@ -93,9 +93,9 @@ public class SteeringRunnable implements Runnable{
 			    		wait();
 			    	}
 			    }
-			    
 			    //steering_cor();
-			    steer();
+			    //steer();
+			    steeringFix();
 			}   		       
 		 } catch (InterruptedException e) {
 		    System.out.println("steerThread interrupted.");
@@ -143,47 +143,54 @@ public class SteeringRunnable implements Runnable{
     
     private void changeAngle(int angle)
     {
-    	steerMotor.rotateTo(angle, false);
+    	steerMotor.rotate(angle, true);
+
     }
     
-    private int measurment()
+    private void changeAngleTo(int angle)
+    {
+    	steerMotor.rotateTo(angle, true);
+
+    }
+    
+    private int measurement()
     {
     	//return (int)(Math.round(((light.getRedMode().sampleSize())*100)));
     	//return 50;
     	
     	float [] sample = new float[light.getRedMode().sampleSize()];
 	    light.getRedMode().fetchSample(sample, 0);
-	    float measurmentVal = sample[0];
-//	    System.out.println("Measurement " + measurementVal);
-	    return (int)(measurmentVal * 100);
+	    float measurementVal = sample[0];
+	    //System.out.println("Measurement " + measurementVal);
+	    return (int)(measurementVal * 100);
     }
     
-    private float measurmentFloat()
+    private float measurementFloat()
     {
     	//return (int)(Math.round(((light.getRedMode().sampleSize())*100)));
     	//return 50;
     	
     	float [] sample = new float[light.getRedMode().sampleSize()];
 	    light.getRedMode().fetchSample(sample, 0);
-	    return  sample[0];
+	    return  (sample[0] * 100);
 	    
     }
 	
 	public void steer() {
-		float measurmentFloat;
-		measurmentFloat = measurmentFloat();
-		measurmentFloat = measurmentFloat * 100;
+		float measurementFloat;
+		measurementFloat = measurementFloat();
+		measurementFloat = measurementFloat * 100;
 		
-		System.out.println(measurmentFloat);
+		System.out.println(measurementFloat);
 		
-		if(measurmentFloat >= 40) {
+		if(measurementFloat >= 40) {
 			setLargeMotorSpeed((getLargeMotorSpeed() /100) * 110);
-			//meas_his[current_his_pos] = measurment;
+			//meas_his[current_his_pos] = measurement;
 			//steer_his[current_his_pos] = 0;
 			
 			System.out.println("keep direction");
 			return;
-		} else if(measurmentFloat >= 25) {
+		} else if(measurementFloat >= 25) {
 			last_angle = steer_his[indexChange(current_his_pos, 1)];
 			//last_angle = Math.min(max_angle, last_angle);
 			//last_angle = Math.max(((-1)*max_angle), last_angle);
@@ -200,7 +207,7 @@ public class SteeringRunnable implements Runnable{
 			//setLargeMotorSpeed((getLargeMotorSpeed() /100) * 95);							
 			current_his_pos = indexPlusOne(current_his_pos); //++position
 			return;
-		} else if(measurmentFloat >= 12) {
+		} else if(measurementFloat >= 12) {
 			last_angle = steer_his[indexChange(current_his_pos, 1)];
 			//last_angle = Math.min(max_angle, last_angle);
 			//last_angle = Math.max(((-1)*max_angle), last_angle);
@@ -238,22 +245,41 @@ public class SteeringRunnable implements Runnable{
 		
 	}
     
+    public void steeringFix() {
+	float measurement = measurementFloat();
+//	    System.out.println("Measurement " + measurement);
+		int diff = (int)(baseLine - measurement);
+//	    System.out.println("Diff " + diff);
+	    int speed = getLargeMotorSpeed();
+
+	    
+	    if(Math.abs(diff) <= 10) {
+	    	if(speed < maxSpeed) {
+	    		setLargeMotorSpeed((speed / 10) * 11);
+	    	}
+	    	
+	    }
+	    
+	    changeAngle(diff/8);
+		return;	
+    }
+	
     public void steering_cor(){
 	
 		int hist = 0;
-		measurment = measurment();	
-		//change = meas_his[indexChange(current_his_pos, 1)];
-		if((meas_his[indexChange(current_his_pos, 1)] - measurment) > threshold) {
-			change = meas_his[indexChange(current_his_pos, 1)] - measurment;
+		measurement = measurement();	
+		change = meas_his[indexChange(current_his_pos, 1)];
+		if((meas_his[indexChange(current_his_pos, 1)] - measurement) > threshold) {
+			change = meas_his[indexChange(current_his_pos, 1)] - measurement;
 			hist = 1;
 			}
 		else {
-			if((meas_his[indexChange(current_his_pos, 5)] - measurment) > threshold) {
-				change = meas_his[indexChange(current_his_pos, 5)] - measurment;
+			if((meas_his[indexChange(current_his_pos, 5)] - measurement) > threshold) {
+				change = meas_his[indexChange(current_his_pos, 5)] - measurement;
 				hist = 5;
 			}
 			else {
-				change = meas_his[indexChange(current_his_pos, 10)] - measurment;
+				change = meas_his[indexChange(current_his_pos, 10)] - measurement;
 				hist = 10;	
 			}			
 		}
@@ -263,7 +289,7 @@ public class SteeringRunnable implements Runnable{
 		if((change > (-threshold)) && (change < threshold))
 		{
 			setLargeMotorSpeed((getLargeMotorSpeed() /100) * 105);
-			meas_his[current_his_pos] = measurment;
+			meas_his[current_his_pos] = measurement;
 			steer_his[current_his_pos] = 0;
 			current_his_pos = indexPlusOne(current_his_pos); //++position
 			System.out.println("keep direction");
@@ -291,7 +317,7 @@ public class SteeringRunnable implements Runnable{
 			}
 			
 			//setLargeMotorSpeed((getLargeMotorSpeed() /100) * 90);
-			meas_his[current_his_pos] = measurment;				
+			meas_his[current_his_pos] = measurement;				
 			current_his_pos = indexPlusOne(current_his_pos); //++position
 			return;
 		}else{
@@ -306,7 +332,7 @@ public class SteeringRunnable implements Runnable{
 			}
 			
 			setLargeMotorSpeed((getLargeMotorSpeed() /100) * 110);
-			meas_his[current_his_pos] = measurment;				
+			meas_his[current_his_pos] = measurement;				
 			current_his_pos = indexPlusOne(current_his_pos); //++position
 			return;				
 			}

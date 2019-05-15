@@ -16,6 +16,7 @@ public class DistanceCheckRunnable implements Runnable{
 	private EV3IRSensor ir; 
 	private EV3LargeRegulatedMotor powerMotor;
 	
+	
 	public DistanceCheckRunnable(BlockingQueue<Job> queueDist, EV3LargeRegulatedMotor powerMotor, EV3IRSensor ir) {
 		this.queueDist = queueDist;
 		this.ir = ir;
@@ -33,23 +34,24 @@ public class DistanceCheckRunnable implements Runnable{
 	@Override
 	public void run() {
 	
-		try{
+		try{	
 			while(true) {
-				//System.out.println("Dist");
+				//System.out.println("Dist");				
 				long now = System.currentTimeMillis(); // number of milliseconds from start of the epoch
 				Job release = new Job(now, now + releaseDeadlineDiff);
 				queueDist.add(release);
-				//System.out.println("Dist release");
-			    suspend();
+				//System.out.println("Dist release");				
+				
+				suspend();
 			    synchronized(this) {
 			    	while(suspended) {
 			    		wait();
 			    	}		    	
+			    }			    
+			   
+			    if (checkDistance()) {
+			    	adaptSpeed();
 			    }
-			    
-			  if (checkDistance()) {
-				  adaptSpeed();
-			  }
 			}  
 	    } catch (InterruptedException e) {
 	       System.out.println("distThread interrupted.");
@@ -99,6 +101,8 @@ public class DistanceCheckRunnable implements Runnable{
 			powerMotor.setSpeed(180);
 			powerMotor.backward();
 			//System.out.println("restart");
+		} else if (newDistance > 70) {
+			powerMotor.setSpeed(180);			
 		} else if (diff > 10) {
 			powerMotor.setSpeed((int) Math.round(1.2 *curSpeed));
 			//System.out.println("over 10");
