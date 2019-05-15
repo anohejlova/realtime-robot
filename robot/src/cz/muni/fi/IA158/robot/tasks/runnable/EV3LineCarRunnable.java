@@ -11,11 +11,11 @@ import lejos.hardware.sensor.EV3IRSensor;
 
 public class EV3LineCarRunnable {
 	
-
+	private static int sleepTime = 5;
     public static void main(String[] args)
-    {
-    	int frame = 50;
-    	Thread mainThread;
+    {    	
+    	int frame = 25;
+    	
     	
     	EV3LargeRegulatedMotor powerMotor = new EV3LargeRegulatedMotor(MotorPort.A);
     	EV3MediumRegulatedMotor steerMotor = new EV3MediumRegulatedMotor(MotorPort.D);
@@ -26,9 +26,9 @@ public class EV3LineCarRunnable {
     	BlockingQueue<Job> queueSteer = new ArrayBlockingQueue<>(10);
     	
     	
-    	
-    	SteeringRunnable steering = new SteeringRunnable(queueSteer, powerMotor, steerMotor, colorSen);
-    	DistanceCheckRunnable distance = new DistanceCheckRunnable(queueDist, powerMotor, IRSen);
+    	Suspender sus = new Suspender();
+    	SteeringRunnable steering = new SteeringRunnable(queueSteer, powerMotor, steerMotor, colorSen, sus);
+    	DistanceCheckRunnable distance = new DistanceCheckRunnable(queueDist, powerMotor, IRSen, sus);
     	
 
     	
@@ -36,7 +36,7 @@ public class EV3LineCarRunnable {
     	Job steerJob = null;
     	int lifeCounter = 0;
     	try {
-    		mainThread = Thread.currentThread();
+    		Thread mainThread = Thread.currentThread();
     		mainThread.setPriority(1);
     		
     		mainThread.sleep(50 * frame);
@@ -62,26 +62,43 @@ public class EV3LineCarRunnable {
 				if ((distJob != null) && (steerJob != null)) {
 					
 					if (distJob.getDeadline() < steerJob.getDeadline()) {
-						System.out.println("con 1");
+						//System.out.println("con 1");
 						//System.out.println("distance main " + System.currentTimeMillis() + " deadline " + distJob.getDeadline());						
-						distance.resume();
-						mainThread.sleep(frame);						
+						sus.setSus(true);
+						distance.resume();						
+						mainThread.sleep(frame);
+						while(sus.getSus()) {
+							mainThread.sleep(sleepTime);
+						}
+						
 						distJob = null;
 					} else {
-						System.out.println("con 2");						
+						//System.out.println("con 2");						
+						sus.setSus(true);
 						steering.resume();			
 						mainThread.sleep(frame);
+						while(sus.getSus()) {
+							mainThread.sleep(sleepTime);
+						}
 						steerJob = null;
 					}
 				} else if (steerJob != null) {
-					System.out.println("con 3");					
+					//System.out.println("con 3");
+					sus.setSus(true);
 					steering.resume();
 					mainThread.sleep(frame);
+					while(sus.getSus()) {
+						mainThread.sleep(sleepTime);
+					}
 					steerJob = null;
 				} else if (distJob != null) {
-					System.out.println("con 4");					
+					//System.out.println("con 4");
+					sus.setSus(true);
 					distance.resume();
 					mainThread.sleep(frame);
+					while(sus.getSus()) {
+						mainThread.sleep(sleepTime);
+					}
 					distJob = null;
 				} else {
 					//System.out.println("NO jobs");
@@ -100,4 +117,3 @@ public class EV3LineCarRunnable {
 		System.exit(0);
     }
 }
-

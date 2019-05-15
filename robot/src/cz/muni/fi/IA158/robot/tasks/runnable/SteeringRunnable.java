@@ -30,15 +30,15 @@ public class SteeringRunnable implements Runnable{
 
 	private int[] meas_his;
 	private int[] steer_his;
-	private long[] timeHis = new long[50];
-	private int timeSize = 0;
 	
 	public Thread thread;
 	boolean suspended = false;
 	BlockingQueue<Job> queueSteer;
 	long releaseDeadlineDiff = 100;
-	
-	public SteeringRunnable(BlockingQueue<Job> queueSteer, EV3LargeRegulatedMotor power, EV3MediumRegulatedMotor steer, EV3ColorSensor lightSen)
+
+	private Suspender mainThread;
+
+	public SteeringRunnable(BlockingQueue<Job> queueSteer, EV3LargeRegulatedMotor power, EV3MediumRegulatedMotor steer, EV3ColorSensor lightSen, Suspender mainThread)
 	{
 		this.queueSteer = queueSteer;
 		
@@ -59,6 +59,8 @@ public class SteeringRunnable implements Runnable{
 		light = lightSen;
 		
 		baseLine = measurementFloat();
+		
+		this.mainThread = mainThread;
 	}
 	
 	@Override
@@ -88,24 +90,15 @@ public class SteeringRunnable implements Runnable{
 				Job release = new Job(now, now + releaseDeadlineDiff);
 				queueSteer.add(release);				
 				//System.out.println("Steer release");
-				timeHis[timeSize] = now;
-				timeSize++;
-				if(timeSize >= 50) {
-					for(int i=0; i<50; i++)
-					{
-						System.out.println(timeHis[i]);
-					}
-					System.exit(-1);
-				}
-				
 				
 			    suspend();
-			     
+			    mainThread.setSus(false);
 			    synchronized(this) {
 			    	while(suspended) {
 			    		wait();
 			    	}
 			    }
+			    //System.out.println("Steer start");
 			    //steering_cor();
 			    //steer();
 			    steeringFix();

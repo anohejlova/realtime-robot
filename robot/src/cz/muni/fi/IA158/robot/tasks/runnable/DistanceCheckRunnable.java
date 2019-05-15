@@ -16,8 +16,9 @@ public class DistanceCheckRunnable implements Runnable{
 	private EV3IRSensor ir; 
 	private EV3LargeRegulatedMotor powerMotor;
 	
+	private Suspender mainThread;
 	
-	public DistanceCheckRunnable(BlockingQueue<Job> queueDist, EV3LargeRegulatedMotor powerMotor, EV3IRSensor ir) {
+	public DistanceCheckRunnable(BlockingQueue<Job> queueDist, EV3LargeRegulatedMotor powerMotor, EV3IRSensor ir, Suspender mainThread) {
 		this.queueDist = queueDist;
 		this.ir = ir;
 		this.powerMotor = powerMotor;
@@ -29,6 +30,7 @@ public class DistanceCheckRunnable implements Runnable{
 			throw new java.lang.IllegalArgumentException("no large motor initializedin distance task");
 		}
 		
+		this.mainThread = mainThread;
 	}
 
 	@Override
@@ -40,8 +42,9 @@ public class DistanceCheckRunnable implements Runnable{
 				long now = System.currentTimeMillis(); // number of milliseconds from start of the epoch
 				Job release = new Job(now, now + releaseDeadlineDiff);
 				queueDist.add(release);
-				//System.out.println("Dist release");
+				//System.out.println("Dist release");			    
 				suspend();
+				mainThread.setSus(false);
 			    synchronized(this) {
 			    	while(suspended) {
 			    		wait();
