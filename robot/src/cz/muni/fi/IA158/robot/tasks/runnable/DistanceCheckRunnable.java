@@ -40,15 +40,13 @@ public class DistanceCheckRunnable implements Runnable{
 				long now = System.currentTimeMillis(); // number of milliseconds from start of the epoch
 				Job release = new Job(now, now + releaseDeadlineDiff);
 				queueDist.add(release);
-				//System.out.println("Dist release");				
-				
+				//System.out.println("Dist release");
 				suspend();
 			    synchronized(this) {
 			    	while(suspended) {
 			    		wait();
 			    	}		    	
 			    }			    
-			   
 			    if (checkDistance()) {
 			    	adaptSpeed();
 			    }

@@ -46,8 +46,8 @@ public class EV3LineCarRunnable {
     		
         	
         	powerMotor.backward();        	
-        	
-        	while (lifeCounter <= 1000) {  
+        	long now = 0;
+        	while (lifeCounter <= 2000) {  
     		
 		    	if (distJob == null) {
 		    		
@@ -62,23 +62,24 @@ public class EV3LineCarRunnable {
 				if ((distJob != null) && (steerJob != null)) {
 					
 					if (distJob.getDeadline() < steerJob.getDeadline()) {
-						//System.out.println("con 1");
-						distance.resume();			
-						mainThread.sleep(frame);
+						System.out.println("con 1");
+						//System.out.println("distance main " + System.currentTimeMillis() + " deadline " + distJob.getDeadline());						
+						distance.resume();
+						mainThread.sleep(frame);						
 						distJob = null;
 					} else {
-						//System.out.println("con 2");						
+						System.out.println("con 2");						
 						steering.resume();			
 						mainThread.sleep(frame);
 						steerJob = null;
 					}
 				} else if (steerJob != null) {
-					//System.out.println("con 3");					
+					System.out.println("con 3");					
 					steering.resume();
 					mainThread.sleep(frame);
 					steerJob = null;
 				} else if (distJob != null) {
-					//System.out.println("con 4");					
+					System.out.println("con 4");					
 					distance.resume();
 					mainThread.sleep(frame);
 					distJob = null;

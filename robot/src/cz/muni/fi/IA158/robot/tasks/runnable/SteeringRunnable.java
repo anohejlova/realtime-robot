@@ -14,7 +14,7 @@ public class SteeringRunnable implements Runnable{
     private float baseLine;
     private int thres = 10;
     private int timer = 0;
-    private int maxSpeed = 180;
+    private int maxSpeed = 270;
     
 	private static int history_size = 11;
 	private static double threshold = 0.05;
@@ -30,6 +30,8 @@ public class SteeringRunnable implements Runnable{
 
 	private int[] meas_his;
 	private int[] steer_his;
+	private long[] timeHis = new long[50];
+	private int timeSize = 0;
 	
 	public Thread thread;
 	boolean suspended = false;
@@ -86,6 +88,17 @@ public class SteeringRunnable implements Runnable{
 				Job release = new Job(now, now + releaseDeadlineDiff);
 				queueSteer.add(release);				
 				//System.out.println("Steer release");
+				timeHis[timeSize] = now;
+				timeSize++;
+				if(timeSize >= 50) {
+					for(int i=0; i<50; i++)
+					{
+						System.out.println(timeHis[i]);
+					}
+					System.exit(-1);
+				}
+				
+				
 			    suspend();
 			     
 			    synchronized(this) {
