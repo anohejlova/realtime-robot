@@ -1,5 +1,9 @@
 package cz.muni.fi.IA158.robot.tasks.runnable;
 
+/**
+ * Class is used as a shared variable for synchronizing threads.
+ * The one stored value represents whether the thread should run or sleep.
+ */
 public class Suspender {
 
 	private boolean suspended = false;

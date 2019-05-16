@@ -7,53 +7,29 @@ import lejos.hardware.sensor.EV3ColorSensor;
 
 public class SteeringRunnable implements Runnable{
 	
+	//pointers to motors and sensor
 	static EV3LargeRegulatedMotor powerMotor;
     static EV3MediumRegulatedMotor steerMotor;    
     static EV3ColorSensor light;
     
     private float baseLine;
-    private int thres = 10;
-    private int timer = 0;
     private int maxSpeed = 270;
-    
-	private static int history_size = 11;
-	private static double threshold = 0.05;
-	private static int max_angle = 50;
-	private static int level_angle = 10;
-
-	private int current_his_pos = 0;
-	private int count = 0;
-	private int measurement = 0;
-	private int change = 0;
-	private int new_angle = 0;
-	private int last_angle = 0;
-
-	private int[] meas_his;
-	private int[] steer_his;
 	
 	public Thread thread;
 	boolean suspended = false;
-	BlockingQueue<Job> queueSteer;
+	//queue for steering
+	BlockingQueue<Job> queueSteer;	
+	//deadline of steering tasks
 	long releaseDeadlineDiff = 100;
 
+	//used to supress main thread
 	private Suspender mainThread;
 
+	//constructor 
 	public SteeringRunnable(BlockingQueue<Job> queueSteer, EV3LargeRegulatedMotor power, EV3MediumRegulatedMotor steer, EV3ColorSensor lightSen, Suspender mainThread)
 	{
 		this.queueSteer = queueSteer;
-		
-		meas_his = new int[history_size];
-		for(int i=0;i<history_size; i++)
-		{
-			meas_his[i] = 0;
-		}
-		
-		steer_his = new int[history_size];
-		for(int i=0;i<history_size; i++)
-		{
-			steer_his[i] = 0;
-		}
-		
+				
 		powerMotor = power;
 		steerMotor = steer;
 		light = lightSen;
@@ -63,9 +39,17 @@ public class SteeringRunnable implements Runnable{
 		this.mainThread = mainThread;
 	}
 	
+	
+	/**
+	 * Function is called when new thread is started.
+	 * It takes care of executing steering jobs and releasing new one.
+	 * First it checks correct resource allocation.
+	 * Creates new job of steering task and add to the queue. Suspends itself. Executes a job of steering task.
+	 */
 	@Override
 	public void run() {
 		try{
+			//check if motors and sensor were loaded properly
 			if (powerMotor == null) {
 				throw new java.lang.IllegalArgumentException("no power motor initialized in streering task");
 			}
@@ -76,31 +60,33 @@ public class SteeringRunnable implements Runnable{
 				throw new java.lang.IllegalArgumentException("no light sensor initialized in streering task");
 			}
 			
+			//reset steering angle and set max engine speed
 			steerMotor.rotateTo(0, false);
-			measurement = measurement();
 			setLargeMotorSpeed(maxSpeed);
-			for(int i=0;i<history_size; i++)
-			{
-				meas_his[i] = measurement;
-			}	    
-			while(true) {
 
-				//System.out.println("Steer");
+			//the ensures that this thread never stops
+			while(true) {
 				long now = System.currentTimeMillis(); // number of milliseconds from start of the epoch
+
+				//create new job of steering task
 				Job release = new Job(now, now + releaseDeadlineDiff);
-				queueSteer.add(release);				
-				//System.out.println("Steer release");
 				
+				//add new task to the queue
+				queueSteer.add(release);
+				
+				//set suspend variable to true
 			    suspend();
+
+			    //stop suspending main thread
 			    mainThread.setSus(false);
+
+			    //enter wait cycle
 			    synchronized(this) {
 			    	while(suspended) {
 			    		wait();
 			    	}
 			    }
-			    //System.out.println("Steer start");
-			    //steering_cor();
-			    //steer();
+			    //execute steering job
 			    steeringFix();
 			}   		       
 		 } catch (InterruptedException e) {
@@ -108,243 +94,92 @@ public class SteeringRunnable implements Runnable{
 		 }
 		 System.out.println("steerThread exiting.");
 	}
-	
-	private int indexChange(int current, int change){
-		return (history_size + (current - change)) % history_size;
-	}
-	
-	private int indexPlusOne(int current){
-		return (current + 1) % history_size;
-	}
-	
+		
+	/**
+	 * Function creates a new thread that is tasked with executing this class instance.
+	 */
 	public void start () {
 		if (thread == null) {
 	    	thread = new Thread (this);
-	    	//thread.setPriority(thread.getPriority() + 1);
-	    	//thread.setPriority(10);
 	    	thread.start();
 		}
 	}
 	
+	/**
+	 * Sets the suspend variable to true to cause the thread to start the wait.
+	 */
 	private void suspend() {
 		suspended = true;
 	}
 	   
+	/**
+	 * Sets the suspend variable to false to stop the thread from waiting.
+	 */
 	public synchronized void resume() {
 		suspended = false;
 	    notify();
 	}
 	
-			
+	/**
+	 * Set news maximum speed for the large engine (Power engine).
+	 * @param newSpeed - new maximum speed
+	 */
     private void setLargeMotorSpeed(int newSpeed)
     {
     	powerMotor.setSpeed(newSpeed);
     }
     
+    /**
+     * Get the current maximum speed of the large engine (Power engine).
+     * @return current maximum speed of the large engine
+     */
     private int getLargeMotorSpeed()
     {
     	return powerMotor.getSpeed();
-    	//return 50;
     }
     
+    /**
+     * Changes angle of the medium engine by value given in angle. Change is relative to current angle.
+     * @param angle number of degrees
+     */
     private void changeAngle(int angle)
     {
     	steerMotor.rotate(angle, true);
 
     }
     
-    private void changeAngleTo(int angle)
-    {
-    	steerMotor.rotateTo(angle, true);
-
-    }
-    
-    private int measurement()
-    {
-    	//return (int)(Math.round(((light.getRedMode().sampleSize())*100)));
-    	//return 50;
-    	
-    	float [] sample = new float[light.getRedMode().sampleSize()];
-	    light.getRedMode().fetchSample(sample, 0);
-	    float measurementVal = sample[0];
-	    //System.out.println("Measurement " + measurementVal);
-	    return (int)(measurementVal * 100);
-    }
-    
+    /**
+     * Measure the amount of reflected light with color sensor
+     * @return the amount of reflected light
+     */
     private float measurementFloat()
-    {
-    	//return (int)(Math.round(((light.getRedMode().sampleSize())*100)));
-    	//return 50;
-    	
+    {	
     	float [] sample = new float[light.getRedMode().sampleSize()];
 	    light.getRedMode().fetchSample(sample, 0);
 	    return  (sample[0] * 100);
 	    
     }
-	
-	public void steer() {
-		float measurementFloat;
-		measurementFloat = measurementFloat();
-		measurementFloat = measurementFloat * 100;
-		
-		System.out.println(measurementFloat);
-		
-		if(measurementFloat >= 40) {
-			setLargeMotorSpeed((getLargeMotorSpeed() /100) * 110);
-			//meas_his[current_his_pos] = measurement;
-			//steer_his[current_his_pos] = 0;
-			
-			System.out.println("keep direction");
-			return;
-		} else if(measurementFloat >= 25) {
-			last_angle = steer_his[indexChange(current_his_pos, 1)];
-			//last_angle = Math.min(max_angle, last_angle);
-			//last_angle = Math.max(((-1)*max_angle), last_angle);
-			System.out.println("thres 25");
-			new_angle = Math.min((int) level_angle, max_angle);
-			if(last_angle > 0)
-			{
-				changeAngle((-1)*(last_angle + new_angle));
-				steer_his[current_his_pos] = (-1) * new_angle;
-			}else{
-				changeAngle((-1)*last_angle + new_angle);
-				steer_his[current_his_pos] = new_angle;
-			}			
-			//setLargeMotorSpeed((getLargeMotorSpeed() /100) * 95);							
-			current_his_pos = indexPlusOne(current_his_pos); //++position
-			return;
-		} else if(measurementFloat >= 12) {
-			last_angle = steer_his[indexChange(current_his_pos, 1)];
-			//last_angle = Math.min(max_angle, last_angle);
-			//last_angle = Math.max(((-1)*max_angle), last_angle);
-			System.out.println("thres 12");
-			new_angle = Math.min((int) level_angle * 2, max_angle);
-			if(last_angle > 0)
-			{
-				changeAngle((-1)*(last_angle + new_angle));
-				steer_his[current_his_pos] = (-1) * new_angle;
-			}else{
-				changeAngle((-1)*last_angle + new_angle);
-				steer_his[current_his_pos] = new_angle;
-			}			
-			//setLargeMotorSpeed((getLargeMotorSpeed() /100) * 75);							
-			current_his_pos = indexPlusOne(current_his_pos); //++position
-			return;
-		} else {
-			last_angle = steer_his[indexChange(current_his_pos, 1)];
-			//last_angle = Math.min(max_angle, last_angle);
-			//last_angle = Math.max(((-1)*max_angle), last_angle);
-			System.out.println("else");
-			new_angle = Math.min((int) level_angle * 4, max_angle);
-			if(last_angle > 0)
-			{
-				changeAngle((-1)*(last_angle + new_angle));
-				steer_his[current_his_pos] = (-1) * new_angle;
-			}else{
-				changeAngle((-1)*last_angle + new_angle);
-				steer_his[current_his_pos] = new_angle;
-			}			
-			//setLargeMotorSpeed((getLargeMotorSpeed() /100) * 50);							
-			current_his_pos = indexPlusOne(current_his_pos); //++position
-			return;
-		} 
-		
-	}
     
+    /**
+     * Main function for steering. It measures current reflected light and adjusts the steering acoordingly.
+     */
     public void steeringFix() {
-	float measurement = measurementFloat();
-//	    System.out.println("Measurement " + measurement);
-		int diff = (int)(baseLine - measurement);
-//	    System.out.println("Diff " + diff);
+    //measure new reflected light value
+	float measurement = measurementFloat(); 
+		
+		//difference between current measurement and baseline value
+		int diff = (int)(baseLine - measurement); 
 	    int speed = getLargeMotorSpeed();
-
 	    
+	    //If diff value is small enough and current speed is not maximum, then accelerate by 10%.
 	    if(Math.abs(diff) <= 10) {
 	    	if(speed < maxSpeed) {
 	    		setLargeMotorSpeed((speed / 10) * 11);
-	    	}
-	    	
-	    }
-	    
+	    	}	    	
+	    }	    
+
+	    //Steering angle is adjusted only by 1/8 of diff to make the steering smoother.
 	    changeAngle(diff/8);
 		return;	
-    }
-	
-    public void steering_cor(){
-	
-		int hist = 0;
-		measurement = measurement();	
-		change = meas_his[indexChange(current_his_pos, 1)];
-		if((meas_his[indexChange(current_his_pos, 1)] - measurement) > threshold) {
-			change = meas_his[indexChange(current_his_pos, 1)] - measurement;
-			hist = 1;
-			}
-		else {
-			if((meas_his[indexChange(current_his_pos, 5)] - measurement) > threshold) {
-				change = meas_his[indexChange(current_his_pos, 5)] - measurement;
-				hist = 5;
-			}
-			else {
-				change = meas_his[indexChange(current_his_pos, 10)] - measurement;
-				hist = 10;	
-			}			
-		}
-			
-		
-		
-		if((change > (-threshold)) && (change < threshold))
-		{
-			setLargeMotorSpeed((getLargeMotorSpeed() /100) * 105);
-			meas_his[current_his_pos] = measurement;
-			steer_his[current_his_pos] = 0;
-			current_his_pos = indexPlusOne(current_his_pos); //++position
-			System.out.println("keep direction");
-			return;
-		}
-		
-		last_angle = steer_his[indexChange(current_his_pos, 1)];
-		last_angle = Math.min(max_angle, last_angle);
-		last_angle = Math.max(((-1)*max_angle), last_angle);
-		count = ((int)Math.round(change / (threshold*100)));
-		
-		System.out.println("Change " + change);
-		System.out.println("Count " + count);
-		
-		if(change > 0)
-		{
-			new_angle = Math.min((int) level_angle * count, max_angle);
-			if(last_angle > 0)
-			{
-				changeAngle((-1)*(last_angle + new_angle));
-				steer_his[current_his_pos] = (-1) * new_angle;
-			}else{
-				changeAngle((-1)*last_angle + new_angle);
-				steer_his[current_his_pos] = new_angle;
-			}
-			
-			//setLargeMotorSpeed((getLargeMotorSpeed() /100) * 90);
-			meas_his[current_his_pos] = measurement;				
-			current_his_pos = indexPlusOne(current_his_pos); //++position
-			return;
-		}else{
-			new_angle = (level_angle / 4) * count;
-			if(last_angle > 0)
-			{
-				changeAngle((-1)*(new_angle));
-				steer_his[current_his_pos] = last_angle - new_angle;
-			}else{
-				changeAngle(new_angle);
-				steer_his[current_his_pos] = last_angle + new_angle;
-			}
-			
-			setLargeMotorSpeed((getLargeMotorSpeed() /100) * 110);
-			meas_his[current_his_pos] = measurement;				
-			current_his_pos = indexPlusOne(current_his_pos); //++position
-			return;				
-			}
-		   
-		
-	}
-
-
+    }   
 }
