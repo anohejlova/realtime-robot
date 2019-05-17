@@ -33,7 +33,7 @@ public class EV3LineCarRunnable {
      */
     public static void main(String[] args)
     {    	
-    	//creates new pointers to the engines and sensors
+    	//creates new pointers to the motors and sensors
     	EV3LargeRegulatedMotor powerMotor = new EV3LargeRegulatedMotor(MotorPort.A);
     	EV3MediumRegulatedMotor steerMotor = new EV3MediumRegulatedMotor(MotorPort.D);
     	EV3ColorSensor colorSen = new EV3ColorSensor(SensorPort.S1);

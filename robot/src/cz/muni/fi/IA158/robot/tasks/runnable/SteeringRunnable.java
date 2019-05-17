@@ -72,7 +72,7 @@ public class SteeringRunnable implements Runnable{
 				throw new java.lang.IllegalArgumentException("no light sensor initialized in streering task");
 			}
 			
-			//reset steering angle and set max engine speed
+			//reset steering angle and set max motor speed
 			steerMotor.rotateTo(0, false);
 			setLargeMotorSpeed(maxSpeed);
 
@@ -133,7 +133,7 @@ public class SteeringRunnable implements Runnable{
 	}
 	
 	/**
-	 * Set news maximum speed for the large engine (Power engine).
+	 * Set news maximum speed for the large motor (Power motor).
 	 * @param newSpeed - new maximum speed
 	 */
     private void setLargeMotorSpeed(int newSpeed)
@@ -142,8 +142,8 @@ public class SteeringRunnable implements Runnable{
     }
     
     /**
-     * Get the current maximum speed of the large engine (Power engine).
-     * @return current maximum speed of the large engine
+     * Get the current maximum speed of the large motor (Power motor).
+     * @return current maximum speed of the large motor
      */
     private int getLargeMotorSpeed()
     {
@@ -151,7 +151,7 @@ public class SteeringRunnable implements Runnable{
     }
     
     /**
-     * Changes angle of the medium engine by value given in angle. Change is relative to current angle.
+     * Changes angle of the medium motor by value given in angle. Change is relative to current angle.
      * @param angle number of degrees
      */
     private void changeAngle(int angle)
