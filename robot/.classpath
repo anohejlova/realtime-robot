@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry excluding="cz/muni/fi/IA158/robot/tasks/DistanceCheck.java|cz/muni/fi/IA158/robot/tasks/EV3LineCar.java|cz/muni/fi/IA158/robot/tasks/Steering.java|cz/muni/fi/IA158/robot/tasks/package-info.java" including="cz/muni/fi/IA158/robot/tasks/runnable/DistanceCheckRunnable.java|cz/muni/fi/IA158/robot/tasks/runnable/EV3LineCarRunnable.java|cz/muni/fi/IA158/robot/tasks/runnable/Job.java|cz/muni/fi/IA158/robot/tasks/runnable/SchedulerRunnable.java|cz/muni/fi/IA158/robot/tasks/runnable/SteeringRunnable.java|cz/muni/fi/IA158/robot/tasks/runnable/package-info.java" kind="src" path="src"/>
+	<classpathentry including="cz/muni/fi/IA158/robot/tasks/runnable/" kind="src" path="src"/>
 	<classpathentry exported="true" kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry exported="true" kind="con" path="org.lejos.ev3.ldt.LEJOS_EV3_LIBRARY_CONTAINER/"/>
 	<classpathentry kind="output" path="bin"/>

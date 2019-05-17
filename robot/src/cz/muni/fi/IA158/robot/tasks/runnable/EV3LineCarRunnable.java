@@ -10,11 +10,15 @@ import lejos.hardware.sensor.EV3ColorSensor;
 import lejos.hardware.sensor.EV3IRSensor;
 
 /**
+ * The program EV3LineCarRunnable drives Lego Mindstorms EV3 robot. The robot follows the line and reacts to obstacles.
+ * 
  * Main class coordinating everything.
  * Allocates and creates everything that is needed.
  * Start new threads.
  * Poll and choose next running job. 
  * Clear up and terminate program execution.
+ * 
+ * @author Alice Nohejlova, Pavel Fikar
  */
 public class EV3LineCarRunnable {
 	//values used for controlling main thread 

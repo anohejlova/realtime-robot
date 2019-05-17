@@ -5,6 +5,11 @@ import java.util.concurrent.BlockingQueue;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
 import lejos.hardware.sensor.EV3IRSensor;
 
+/**
+ * Class DistanceCheckRunnable represents the task of checking distance before the robot 
+ * using the IR sensor and consequent reaction by adjusting the speed.
+ *
+ */
 public class DistanceCheckRunnable implements Runnable{
 	
 	public Thread thread;
@@ -15,9 +20,19 @@ public class DistanceCheckRunnable implements Runnable{
 	private int newDistance;
 	private EV3IRSensor ir; 
 	private EV3LargeRegulatedMotor powerMotor;
-	
 	private Suspender mainThread;
 	
+	/**
+	 * Constructor for the class DistanceCheckRunnable
+	 * 
+	 * Initializes resources for thread of this class. 
+	 * 
+	 * @param queueDist  the queue in which new generated jobs will be added
+	 * @param powerMotor power motor of the robot
+	 * @param ir         IR Sensor of the robot
+	 * @param mainThread Suspender of the main thread
+	 * 
+	 */
 	public DistanceCheckRunnable(BlockingQueue<Job> queueDist, EV3LargeRegulatedMotor powerMotor, EV3IRSensor ir, Suspender mainThread) {
 		this.queueDist = queueDist;
 		this.ir = ir;
@@ -32,17 +47,21 @@ public class DistanceCheckRunnable implements Runnable{
 		
 		this.mainThread = mainThread;
 	}
-
+	
+	/**
+	 * Method run runs checking of distance and based on its result react with adjusting the speed, 
+	 * releases new Job to the queue and suspends thread of this class.
+	 */
 	@Override
 	public void run() {
 	
 		try{	
 			while(true) {
-				//System.out.println("Dist");				
+							
 				long now = System.currentTimeMillis(); // number of milliseconds from start of the epoch
 				Job release = new Job(now, now + releaseDeadlineDiff);
 				queueDist.add(release);
-				//System.out.println("Dist release");			    
+		    
 				suspend();
 				mainThread.setSus(false);
 			    synchronized(this) {
@@ -55,11 +74,18 @@ public class DistanceCheckRunnable implements Runnable{
 			    }
 			}  
 	    } catch (InterruptedException e) {
-	       System.out.println("distThread interrupted.");
+	       System.err.println("distThread interrupted.");
 	    }
-	    System.out.println("distThread exiting.");
+	    //System.out.println("distThread exiting.");
 	}
 	
+	/**
+	 * Method checkDistance measures distance in front of the robot
+	 * 
+	 * Measures distance using the IR sensor and compares it with the last measurement.
+	 * 
+	 * @return if the power motor should react by adjusting the speed
+	 */
 	private boolean checkDistance() {
 		
 		lastDistance = newDistance;
@@ -75,10 +101,16 @@ public class DistanceCheckRunnable implements Runnable{
 	      
 	}
 	
+	/**
+	 * Method adaptSpeed reacts to the current and last measured distance.
+	 * 
+	 * If current measured speed is too low, the power motor stops.
+	 * If the current distance is less than last distance, the power motor slows down.
+	 * If the current distance is more than last distance, the power motor speeds up.
+	 */
 	private void adaptSpeed() {
 		
 		if (newDistance <= 20) {
-			//System.out.println("STOP" + newDistance + " " + lastDistance);
 			powerMotor.stop();
 			return;
 		} 
@@ -88,41 +120,43 @@ public class DistanceCheckRunnable implements Runnable{
 					
 		if (diff <= -60) {
 			powerMotor.setSpeed((int) Math.round(0.2 *curSpeed));
-			//System.out.println(" sub -60");
 		} else if (diff <= -40) {
 			powerMotor.setSpeed((int) Math.round(0.4 *curSpeed));
-			//System.out.println("sub -40");
 		} else if (diff <= -20) {
 			powerMotor.setSpeed((int) Math.round(0.6 *curSpeed));
-			//System.out.println("sub -20");
 		} else if (diff < 10) {
 			powerMotor.setSpeed((int) Math.round(0.8 *curSpeed));
-			//System.out.println("sub 10");
 		} else if ((diff > 60) && (lastDistance <= 20)) {
 			powerMotor.setSpeed(180);
 			powerMotor.backward();
-			//System.out.println("restart");
 		} else if (newDistance > 70) {
 			powerMotor.setSpeed(180);			
 		} else if (diff > 10) {
 			powerMotor.setSpeed((int) Math.round(1.2 *curSpeed));
-			//System.out.println("over 10");
 		}
 	}
 	
+	/**
+	 * Method start starts the thread on this runnable class.
+	 */
 	public void start () {
 		if (thread == null) {
 	    	thread = new Thread (this);
-	    	//thread.setPriority(thread.getPriority() + 1);
-	    	//thread.setPriority(10);
 	    	thread.start();
 		}
 	}
 	
+	
+	/**
+	 * Method suspend enables suspending of thread of this class.
+	 */
 	private void suspend() {
 		suspended = true;
 	}
 	   
+	/**
+	 * Method resume awakes thread of this class.
+	 */
 	public synchronized void resume() {
 		suspended = false;
 	    notify();
