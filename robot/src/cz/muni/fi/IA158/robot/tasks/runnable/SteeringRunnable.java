@@ -34,7 +34,7 @@ public class SteeringRunnable implements Runnable{
 	 * Initializes resources for thread of this class. 
 	 * @param queueSteer  the queue in which new generated jobs will be added
 	 * @param power       power motor of the robot
-	 * @param steer		  steering motor of the robot
+	 * @param steer	      steering motor of the robot
 	 * @param lightSen    color sensor of the robot
 	 * @param mainThread  Suspender of the main thread
 	 */
