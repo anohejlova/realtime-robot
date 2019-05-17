@@ -5,6 +5,10 @@ import lejos.hardware.motor.EV3LargeRegulatedMotor;
 import lejos.hardware.motor.EV3MediumRegulatedMotor;
 import lejos.hardware.sensor.EV3ColorSensor;
 
+/**
+ * Class SteeringRunnable represents the task of steering to follow the line.
+ *
+ */
 public class SteeringRunnable implements Runnable{
 	
 	//pointers to motors and sensor
@@ -25,7 +29,15 @@ public class SteeringRunnable implements Runnable{
 	//used to supress main thread
 	private Suspender mainThread;
 
-	//constructor 
+	/**
+	 * Constructor of the SteeringRunnable.
+	 * Initializes resources for thread of this class. 
+	 * @param queueSteer  the queue in which new generated jobs will be added
+	 * @param power       power motor of the robot
+	 * @param steer		  steering motor of the robot
+	 * @param lightSen    color sensor of the robot
+	 * @param mainThread  Suspender of the main thread
+	 */
 	public SteeringRunnable(BlockingQueue<Job> queueSteer, EV3LargeRegulatedMotor power, EV3MediumRegulatedMotor steer, EV3ColorSensor lightSen, Suspender mainThread)
 	{
 		this.queueSteer = queueSteer;

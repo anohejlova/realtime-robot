@@ -12,15 +12,15 @@ import lejos.hardware.sensor.EV3IRSensor;
  */
 public class DistanceCheckRunnable implements Runnable{
 	
-	public Thread thread;
-	boolean suspended = false;
-	private BlockingQueue<Job> queueDist;
-	long releaseDeadlineDiff = 200;
-	private int lastDistance = 100;
-	private int newDistance;
-	private EV3IRSensor ir; 
-	private EV3LargeRegulatedMotor powerMotor;
-	private Suspender mainThread;
+	public Thread thread; // thread based on this runnable
+	boolean suspended = false; // if the thread of this class should sleep
+	private BlockingQueue<Job> queueDist; // the queue in which new generated jobs will be added
+	long releaseDeadlineDiff = 200; // difference between release and deadline of the created job
+	private int lastDistance = 100; // last distance measured
+	private int newDistance; // new measured distance
+	private EV3IRSensor ir; // IR sensor of the robot
+	private EV3LargeRegulatedMotor powerMotor; // power motor of the robot
+	private Suspender mainThread; // suspender of the main program thread
 	
 	/**
 	 * Constructor for the class DistanceCheckRunnable
@@ -32,6 +32,7 @@ public class DistanceCheckRunnable implements Runnable{
 	 * @param ir         IR Sensor of the robot
 	 * @param mainThread Suspender of the main thread
 	 * 
+	 * @throws IllegalArgumentException if motor or sensor are not initialized
 	 */
 	public DistanceCheckRunnable(BlockingQueue<Job> queueDist, EV3LargeRegulatedMotor powerMotor, EV3IRSensor ir, Suspender mainThread) {
 		this.queueDist = queueDist;
@@ -42,7 +43,7 @@ public class DistanceCheckRunnable implements Runnable{
 			throw new java.lang.IllegalArgumentException("no IR Sensor initialized in distance task");
 		}
 		if (this.powerMotor == null) {
-			throw new java.lang.IllegalArgumentException("no large motor initializedin distance task");
+			throw new java.lang.IllegalArgumentException("no large motor initialized in distance task");
 		}
 		
 		this.mainThread = mainThread;
