@@ -14,7 +14,7 @@ public class DistanceCheckRunnable implements Runnable{
 	
 	public Thread thread; // thread based on this runnable
 	boolean suspended = false; // if the thread of this class should sleep
-	private BlockingQueue<Job> queueDist; // the queue in which new generated jobs will be added
+	private BlockingQueue<Job> queueDist; // the queue to which new generated jobs will be added
 	long releaseDeadlineDiff = 200; // difference between release and deadline of the created job
 	private int lastDistance = 100; // last distance measured
 	private int newDistance; // new measured distance
